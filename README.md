@@ -11,34 +11,61 @@ meteor
 Here is a simplified example of the noteworthy code in this repo (check `app.jsx` for the in depth version):
 
 ```
-App = React.createClass({
-    mixins: [TrackerReact],
+ParentComponent = React.createClass({
+    mixins: [EventSelector, HelperLookup, TrackerReact],
 
-	//tracker-based reactivity in action, no need for `getMeteorData`!
-    tasks() {
-        return Tasks.find({}).fetch(); //fetch must be called to trigger reactivity
-    },
+	getInitialState() {
+		return {title: 'n/a'};
+	},
 	
-	
-	//state-based reactivity working in conjunection with tracker-based reactivity.
-	//track render autoruns are kept up to date!
     title() {
-		return this.state && this.state.title ? `(${this.state.title})` : ``;
+        let parentTitle = this.state.title;
+		let childName = this.props.component.name;
+				
+        return `${parentTitle} > ${childName}`;
     },
-	
-	render() {
-		return (
-			<di>
-				<h2>{this.title()}</h2>
 
-				<ul>
-				  	  {this.tasks().map((task) => {
-						  return <Task key={task._id} task={task} />;
-					  })}
-				</ul>
-			</div>
-		);
-	}
+    'click a.set-title'() {
+        let titles = prompt('Change the title of the parent component, so you can see its state and instance context used by child components. If you use a comma, you can also rename this component--like this: "parent title, child name". This demonstrates accessing both child props and parent state in one method!');
+        let parts = titles.split(',');
+		let parentTitle = parts[0];
+		let childName = parts[1];
+		
+		if(parentTitle) this.setState({title: parentTitle});
+		if(childName) Components.update(this.props.component._id, {$set: {name: childName}});
+    },
+		
+	'click button.add-component'() {
+		let name = prompt('name your component');
+		if(name) Components.insert({name: name});
+	},
+		
+    render() {
+        return (
+            <div>
+				<h1>PARENT COMPONENT TITLE: {this.state.title}</h1>
+		
+				{Components.find().map((c) => {
+					return <ChildComponent key={c._id} component={c} />;
+				})}
+				
+				<button className="add-component">ADD COMPONENT</button>
+            </div>
+        );
+    }
+});
+
+
+ChildComponent = React.createClass({
+    mixins: [EventSelector, HelperLookup, TrackerReact],
+
+    render() {
+        return (
+            <div>
+                <h1>My title is: {this.title()} - <a className="set-title" href="#">SET TITLE</a></h1>
+            </div>
+        );
+    }
 });
 ```
 

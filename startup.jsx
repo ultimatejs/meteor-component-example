@@ -1,5 +1,9 @@
 if (Meteor.isClient) {
   Meteor.startup(function () {
-    ReactDOM.render(<ParentComponent />, document.getElementById("render-target"));
+    let node = document.createElement('div');    
+    node.setAttribute('id', 'render-target');                   
+	document.body.appendChild(node); //dont send Blaze, Spacebars, etc to the client                            
+
+    ReactDOM.render(<ParentComponent />, node);
   });
 }
